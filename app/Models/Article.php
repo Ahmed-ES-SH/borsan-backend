@@ -9,8 +9,8 @@ class Article extends Model
     protected $fillable = [
         "title_en",
         "title_ar",
-        "description_en",
-        "description_ar",
+        "content_en",
+        "content_ar",
         "image",
         "status",
         "views",
@@ -26,5 +26,10 @@ class Article extends Model
     public function author()
     {
         return $this->belongsTo(User::class, 'author_id');
+    }
+
+    public function interactions()
+    {
+        return $this->hasMany(ArticleInteractions::class, 'article_id');
     }
 }

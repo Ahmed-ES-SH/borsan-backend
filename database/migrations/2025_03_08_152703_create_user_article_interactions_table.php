@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('article_interactions', function (Blueprint $table) {
+        Schema::create('user_article_interactions', function (Blueprint $table) {
             $table->id();
-            $table->integer('loves')->default(0);
-            $table->integer('likes')->default(0);
-            $table->integer('dislikes')->default(0);
-            $table->integer('laughtes')->default(0);
+            $table->enum('interaction_type', ['like', 'love', 'dislike', 'laughter']);
+            $table->foreignId('user_id')->constrained('users', 'id')->onDelete('cascade')->onUpdate('cascade');
             $table->foreignId('article_id')->constrained('articles', 'id')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
         });
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('article_interactions');
+        Schema::dropIfExists('user_article_interactions');
     }
 };

@@ -2,64 +2,129 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreCategoryRequest;
+use App\Http\Requests\UpdateCategoryRequest;
+use App\Http\Services\ImageService;
+use App\Http\Traits\ApiResponse;
 use App\Models\Category;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
+    use ApiResponse;
+    protected $imageservice;
+
+    public function __construct(ImageService $imageService)
+    {
+        $this->imageservice = $imageService;
+    }
+
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //
+        try {
+            $Categories = Category::orderBy('created_at', 'desc')->paginate(30);
+            if ($Categories->total === 0) {
+                return $this->noContentResponse();
+            }
+            return $this->paginationResponse($Categories, 200);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+
+
+    public function publicCategories()
     {
-        //
+        try {
+            $categories = Category::orderByDesc('created_at')->limit(8)->get();
+
+            if ($categories->count() === 0) {
+                return $this->noContentResponse();
+            }
+
+            return $this->successResponse($categories, 200);
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to fetch categories.', [
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
+
+
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreCategoryRequest $request)
     {
-        //
+        try {
+            $data = $request->validated();
+            $category = new Category();
+            $category->fill($data);
+            if ($request->has('image')) {
+                $this->imageservice->ImageUploaderwithvariable($request, $category, 'images/articleCategories', 'image');
+            }
+            return $this->successResponse($category, 201);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Category $category)
+    public function show($id)
     {
-        //
+        $category = Category::findOrFail($id);
+        return $this->successResponse($category, 200);
+        try {
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Category $category)
-    {
-        //
-    }
+
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Category $category)
+    public function update($id, UpdateCategoryRequest $request)
     {
-        //
+        try {
+            $category = Category::findOrFail($id);
+            $data = $request->validated();
+            $category->update($data);
+            if ($request->has('image')) {
+                $this->imageservice->ImageUploaderwithvariable($request, $category, 'images/articleCategories');
+            }
+            return $this->successResponse($category->fresh(), 200);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Category $category)
+    public function destroy($id)
     {
-        //
+        try {
+            $articleCategory = Category::findOrFail($id);
+
+            if ($articleCategory->image) {
+                $this->imageservice->deleteOldImage($articleCategory, 'images/articleCategories');
+            }
+
+            $articleCategory->delete();
+
+            return $this->successResponse(['name' => $articleCategory->title_en], 200);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
     }
 }

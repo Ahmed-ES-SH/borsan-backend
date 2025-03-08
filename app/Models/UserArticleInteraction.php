@@ -4,15 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ArticleInteractions extends Model
+class UserArticleInteraction extends Model
 {
     protected $fillable = [
-        'loves',
-        'likes',
-        'dislikes',
-        'laughters',
+        'interaction_type',
+        'user_id',
         'article_id',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 
     public function article()
     {
