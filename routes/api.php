@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ArticleCategoryController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -87,17 +88,31 @@ Route::middleware(['auth:sanctum'])->group(function () {
 //  Admin  Routes ----------
 // -------------------------
 
-Route::middleware(['auth:sanctum', 'checkAdmin'])->group(function () {
+// Route::middleware(['auth:sanctum', 'checkAdmin'])->group(function () {
 
-    // -------------------------
-    // users Routes ------------
-    // -------------------------
+// -------------------------
+// users Routes ------------
+// -------------------------
 
-    Route::controller(UserController::class)->group(function () {
-        Route::get('/users', 'index');
-        Route::get('/users-ids', 'getUsersIds');
-        Route::get('/users-count', 'getUsersCount');
-        Route::get('/search-for-user-by-name', 'searchForUsersByName');
-        Route::delete('/delete-user/{id}', 'destroy');
-    });
+Route::controller(UserController::class)->group(function () {
+    Route::get('/users', 'index');
+    Route::get('/users-ids', 'getUsersIds');
+    Route::get('/users-count', 'getUsersCount');
+    Route::get('/search-for-user-by-name', 'searchForUsersByName');
+    Route::delete('/delete-user/{id}', 'destroy');
 });
+
+
+// ---------------------------------------
+// Articles Categories Routes ------------
+// ---------------------------------------
+
+Route::controller(ArticleCategoryController::class)->group(function () {
+    Route::get('/article-categories', 'index');
+    Route::get('/public-article-categories', 'publicCategories');
+    Route::post('/add-article-category', 'store');
+    Route::get('/article-category/{id}', 'show');
+    Route::post('/update-article-category/{id}', 'update');
+    Route::post('/delete-article-category/{id}', 'destroy');
+});
+// });

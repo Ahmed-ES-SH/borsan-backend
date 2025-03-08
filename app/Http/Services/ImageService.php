@@ -4,6 +4,7 @@ namespace App\Http\Services;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 class ImageService
 {
@@ -16,7 +17,10 @@ class ImageService
      * @return void
      */
 
-    public function ImageUploaderwithvariable(Request $request, $user, string $storagePath = 'images/users', $variable = 'image')
+
+
+
+    public function ImageUploaderwithvariable(Request $request, $model, string $storagePath = 'images/unkowun', $variable = 'image')
     {
         if ($request->hasFile($variable)) {
             // -------------------------
@@ -25,64 +29,41 @@ class ImageService
             $imageFile = $request->file($variable);
 
             // -------------------------
-            // تحديد اسم العمود لتخزين الرابط
+            // حذف الصورة القديمة إذا كانت موجودة
             // -------------------------
-            $columnName = $variable;
-
-            // -------------------------
-            // حذف الصورة القديمة
-            // -------------------------
-            $old_image = $user->{$columnName};
-            if ($old_image) {
-                $old_image_name = basename(parse_url($old_image, PHP_URL_PATH));
-                $file_path = public_path($storagePath . '/' . $old_image_name);
-                if (File::exists($file_path)) {
-                    File::delete($file_path);
-                }
+            if ($model->{$variable}) {
+                Storage::disk('public')->delete(str_replace('/storage/', '', $model->{$variable}));
             }
 
             // -------------------------
-            // تحديث الصورة الجديدة
+            // رفع الصورة إلى مجلد storage/app/public
             // -------------------------
-            // -------------------------
-            // إنشاء اسم الملف الجديد
-            // -------------------------
-            $originalName = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
-            $extension = $imageFile->getClientOriginalExtension();
-            $filename = $originalName . '_' . uniqid() . '.' . $extension;
-            $imageFile->move(public_path($storagePath), $filename);
+            $path = $imageFile->store($storagePath, 'public');
 
-            // تحديث مسار الصورة في نموذج المستخدم
-            $user->{$columnName} = url('/') . '/'  . $storagePath . '/' . $filename;
-            $user->save();
+            // -------------------------
+            // تخزين رابط الصورة في قاعدة البيانات
+            // -------------------------
+            $model->{$variable} = Storage::url($path);
+            $model->save();
         }
     }
 
 
 
-    public function deleteOldImage($model, $storagePath)
+
+    public function deleteOldImage($model, $storagePath = 'images/unkowun', $column = 'image')
     {
         if ($model) {
-            $old_image = $model->image;
-            $old_icon = $model->icon;
+            $oldFile = $model->{$column};
+            if ($oldFile) {
+                // استخراج اسم الملف فقط من الرابط الكامل
+                $oldFileName = basename(parse_url($oldFile, PHP_URL_PATH));
 
-            if ($old_icon) {
-                $oldIconName = basename(parse_url($old_icon, PHP_URL_PATH));
-                $filePath = public_path($storagePath . '/' . $oldIconName);
-                if (File::exists($filePath)) {
-                    File::delete($filePath);
-                }
-            }
-            if ($old_image) {
-                // استخراج اسم الصورة من الرابط
-                $oldImageName = basename(parse_url($old_image, PHP_URL_PATH));
-                // تحديد المسار الفعلي للصورة في الخادم
-                $filePath = public_path($storagePath . '/' . $oldImageName);
+                // تحديد المسار داخل مجلد التخزين
+                $filePath = $storagePath . '/' . $oldFileName;
 
-                // التحقق إذا كانت الصورة موجودة ثم حذفها
-                if (File::exists($filePath)) {
-                    File::delete($filePath);
-                }
+                // حذف الصورة من التخزين
+                Storage::disk('public')->delete($filePath);
             }
         }
     }
