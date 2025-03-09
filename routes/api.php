@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\ArticleCategoryController;
+use App\Http\Controllers\ArticleCommentController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\ArticleInteractionsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\UserController;
 use App\Models\ArticleCategory;
 use Illuminate\Support\Facades\Route;
@@ -115,6 +117,20 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
 
+
+    // -----------------------------
+    //  Notifications   Routes -----
+    // -----------------------------
+
+    Route::controller(NotificationController::class)->group(function () {
+        Route::post('/send-notification', 'sendNotification');
+        Route::post('/send-multiple-notification', 'sendNotifications');
+        Route::get('/notifications/{id}', 'getNotificationsForUser');
+        Route::get('/last-ten-notifications', 'getLastTenNotifications');
+        Route::post('/make-notifications-readed', 'makeAllNotificationsAsRead');
+    });
+
+
     // ------------------------------------------
     //  Article Interactions Routes -------------
     // ------------------------------------------
@@ -122,6 +138,18 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/add-article-interaction', [ArticleInteractionsController::class, 'addInterAction']);
     Route::post('/update-article-interaction', [ArticleInteractionsController::class, 'updateInteraction']);
     Route::delete('/cancle-article-interaction', [ArticleInteractionsController::class, 'removeInteraction']);
+
+
+    // ------------------------------------------
+    //  Article Comments Routes -----------------
+    // ------------------------------------------
+
+    Route::controller(ArticleCommentController::class)->group(function () {
+        Route::post('/add-comment', 'store');
+        Route::post('/update-comment/{id}', 'updateComment');
+        Route::post('/like-comment/{id}', 'likeComment');
+        Route::post('/unlike-comment/{id}', 'unlikeComment');
+    });
 });
 
 

@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('BROADCAST_CONNECTION', 'null'),
+    'default' => env('BROADCAST_DRIVER', 'pusher'),
 
     /*
     |--------------------------------------------------------------------------
@@ -34,14 +34,17 @@ return [
             'key' => env('PUSHER_APP_KEY'),
             'secret' => env('PUSHER_APP_SECRET'),
             'app_id' => env('PUSHER_APP_ID'),
-            'cluster' => env('PUSHER_APP_CLUSTER'),
-            'useTLS' => true,
             'options' => [
                 'cluster' => env('PUSHER_APP_CLUSTER'),
+                'host' => env('PUSHER_HOST', 'api.pusher.com'),
+                'port' => env('PUSHER_PORT', 443),
+                'scheme' => env('PUSHER_SCHEME', 'http'),
+                'encrypted' => true,
                 'useTLS' => true,
             ],
         ],
     ],
+
 
 
 ];

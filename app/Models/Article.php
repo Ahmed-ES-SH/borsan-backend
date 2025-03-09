@@ -32,4 +32,16 @@ class Article extends Model
     {
         return $this->hasMany(ArticleInteractions::class, 'article_id');
     }
+
+    public function comments()
+    {
+        return $this->hasMany(ArticleComment::class, 'article_id');
+    }
+
+    public function commentsWithReplies()
+    {
+        return $this->hasMany(ArticleComment::class, 'article_id')
+            ->whereNull('parent_id')
+            ->with('replies'); // جلب الردود مع كل تعليق
+    }
 }
