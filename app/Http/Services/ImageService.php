@@ -67,4 +67,45 @@ class ImageService
             }
         }
     }
+
+
+
+    public function uploadChatAttachment(Request $request, $model, string $storagePath = 'attachments/messages', string $variable = 'attachment'): ?string
+    {
+        if ($request->hasFile($variable)) {
+            // تحديد الملف المراد رفعه
+            $file = $request->file($variable);
+
+            // رفع الملف إلى مجلد التخزين المحدد
+            $path = $file->store($storagePath, 'public');
+
+            // تخزين رابط الملف الجديد في قاعدة البيانات
+            $model->{$variable} = Storage::url($path);
+            $model->save();
+
+            return $model->{$variable}; // إرجاع رابط المرفق الجديد
+        }
+
+        return null;
+    }
+
+
+    public function deleteChatAttachment($model, string $variable = 'attachment'): bool
+    {
+        if ($model->{$variable}) {
+            // استخراج مسار الملف من الرابط المخزن
+            $filePath = str_replace('/storage/', '', $model->{$variable});
+
+            // حذف الملف من التخزين
+            Storage::disk('public')->delete($filePath);
+
+            // إزالة المرفق من قاعدة البيانات
+            $model->{$variable} = null;
+            $model->save();
+
+            return true; // تم الحذف بنجاح
+        }
+
+        return false; // لا يوجد مرفق للحذف
+    }
 }

@@ -6,6 +6,8 @@ use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\ArticleInteractionsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ContactMessageController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\UserController;
 use App\Models\ArticleCategory;
@@ -68,6 +70,14 @@ Route::post('/register', [UserController::class, 'store']);
 
 Route::get('/auth/google/redirect', [AuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+
+
+
+// ---------------------------------
+// Contact  Messages Routes --------
+// ---------------------------------
+
+Route::post('/add-contact-message', [ContactMessageController::class, 'store']);
 
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -150,6 +160,34 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/like-comment/{id}', 'likeComment');
         Route::post('/unlike-comment/{id}', 'unlikeComment');
     });
+
+
+    // ------------------------------------------
+    //  Conversations  Routes -------------------
+    // ------------------------------------------
+
+    Route::controller(ConversationController::class)->group(function () {
+        // ✅ إنشاء محادثة جديدة
+        Route::post('/conversations',  'store')->name('conversations.store');
+
+        // ✅ جلب محادثة معينة مع الرسائل
+        Route::get('/conversations/{id}',  'getConversation')->name('conversations.get');
+
+        // ✅ جلب جميع المحادثات الخاصة بالمستخدم
+        Route::get('/user/{id}/conversations',  'getUserConversations')->name('conversations.user');
+
+        // ✅ حذف رسالة معينة
+        Route::delete('/messages/{messageId}',  'deleteMessage')->name('messages.delete');
+
+        // ✅ تحديد الرسائل كمقروءة
+        Route::post('/conversations/{conversationId}/mark-as-read/{userId}',  'markAsRead')->name('messages.markAsRead');
+
+        // ✅ حظر مستخدم في محادثة
+        Route::post('/conversations/{conversationId}/block',  'blockUser')->name('conversations.block');
+
+        // ✅ إلغاء الحظر عن مستخدم في محادثة
+        Route::delete('/conversations/{conversationId}/unblock',  'unblockUser')->name('conversations.unblock');
+    });
 });
 
 
@@ -227,6 +265,20 @@ Route::middleware(['auth:sanctum', 'checkAdmin'])->group(function () {
         Route::get('/article/{id}', 'show');
         Route::post('/update-article/{id}', 'update');
         Route::post('/delete-article/{id}', 'destroy');
+    });
+
+
+
+
+    // ---------------------------------
+    // Contact  Messages Routes --------
+    // ---------------------------------
+
+    Route::controller(ContactMessageController::class)->group(function () {
+        Route::get('/contact-messages', 'index');
+        Route::get('/contact-message/{id}', 'show');
+        Route::post('/update-contact-message/{id}', 'update');
+        Route::delete('/contact-message/{id}', 'destroy');
     });
 });
 
