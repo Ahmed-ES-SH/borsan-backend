@@ -22,7 +22,7 @@ trait ApiResponse
     protected function paginationResponse($data, $status = 200, $message = "")
     {
         return response()->json([
-            'data' => $data,
+            'data' => $data->items(),
             'pagination' => [
                 'total' => $data->total(),
                 'per_page' => $data->perPage(),
@@ -41,7 +41,7 @@ trait ApiResponse
     // success response for no content
     protected function noContentResponse()
     {
-        return response()->json(null, 204);
+        return response()->json(null, 404);
     }
 
 

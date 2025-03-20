@@ -20,7 +20,7 @@ class ImageService
 
 
 
-    public function ImageUploaderwithvariable(Request $request, $model, string $storagePath = 'images/unkowun', $variable = 'image')
+    public function ImageUploaderwithvariable(Request $request, $user, string $storagePath = 'images/users', $variable = 'image')
     {
         if ($request->hasFile($variable)) {
             // -------------------------
@@ -29,41 +29,65 @@ class ImageService
             $imageFile = $request->file($variable);
 
             // -------------------------
-            // حذف الصورة القديمة إذا كانت موجودة
+            // تحديد اسم العمود لتخزين الرابط
             // -------------------------
-            if ($model->{$variable}) {
-                Storage::disk('public')->delete(str_replace('/storage/', '', $model->{$variable}));
+            $columnName = $variable;
+
+            // -------------------------
+            // حذف الصورة القديمة
+            // -------------------------
+            $old_image = $user->{$columnName};
+            if ($old_image) {
+                $old_image_name = basename(parse_url($old_image, PHP_URL_PATH));
+                $file_path = public_path($storagePath . '/' . $old_image_name);
+                if (File::exists($file_path)) {
+                    File::delete($file_path);
+                }
             }
 
             // -------------------------
-            // رفع الصورة إلى مجلد storage/app/public
+            // تحديث الصورة الجديدة
             // -------------------------
-            $path = $imageFile->store($storagePath, 'public');
+            // -------------------------
+            // إنشاء اسم الملف الجديد
+            // -------------------------
+            $originalName = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+            $extension = $imageFile->getClientOriginalExtension();
+            $filename = $originalName . '_' . uniqid() . '.' . $extension;
+            $imageFile->move(public_path($storagePath), $filename);
 
-            // -------------------------
-            // تخزين رابط الصورة في قاعدة البيانات
-            // -------------------------
-            $model->{$variable} = Storage::url($path);
-            $model->save();
+            // تحديث مسار الصورة في نموذج المستخدم
+            $user->{$columnName} = url('/') . '/'  . $storagePath . '/' . $filename;
+            $user->save();
         }
     }
 
 
 
 
-    public function deleteOldImage($model, $storagePath = 'images/unkowun', $column = 'image')
+    public function deleteOldImage($model, $storagePath)
     {
         if ($model) {
-            $oldFile = $model->{$column};
-            if ($oldFile) {
-                // استخراج اسم الملف فقط من الرابط الكامل
-                $oldFileName = basename(parse_url($oldFile, PHP_URL_PATH));
+            $old_image = $model->image;
+            $old_icon = $model->icon;
 
-                // تحديد المسار داخل مجلد التخزين
-                $filePath = $storagePath . '/' . $oldFileName;
+            if ($old_icon) {
+                $oldIconName = basename(parse_url($old_icon, PHP_URL_PATH));
+                $filePath = public_path($storagePath . '/' . $oldIconName);
+                if (File::exists($filePath)) {
+                    File::delete($filePath);
+                }
+            }
+            if ($old_image) {
+                // استخراج اسم الصورة من الرابط
+                $oldImageName = basename(parse_url($old_image, PHP_URL_PATH));
+                // تحديد المسار الفعلي للصورة في الخادم
+                $filePath = public_path($storagePath . '/' . $oldImageName);
 
-                // حذف الصورة من التخزين
-                Storage::disk('public')->delete($filePath);
+                // التحقق إذا كانت الصورة موجودة ثم حذفها
+                if (File::exists($filePath)) {
+                    File::delete($filePath);
+                }
             }
         }
     }
@@ -73,33 +97,73 @@ class ImageService
     public function uploadChatAttachment(Request $request, $model, string $storagePath = 'attachments/messages', string $variable = 'attachment'): ?string
     {
         if ($request->hasFile($variable)) {
+            // -------------------------
             // تحديد الملف المراد رفعه
+            // -------------------------
             $file = $request->file($variable);
 
-            // رفع الملف إلى مجلد التخزين المحدد
-            $path = $file->store($storagePath, 'public');
+            // -------------------------
+            // تحديد اسم العمود لتخزين الرابط
+            // -------------------------
+            $columnName = $variable;
 
-            // تخزين رابط الملف الجديد في قاعدة البيانات
-            $model->{$variable} = Storage::url($path);
+            // -------------------------
+            // حذف المرفق القديم
+            // -------------------------
+            $old_file = $model->{$columnName};
+            if ($old_file) {
+                $old_file_name = basename(parse_url($old_file, PHP_URL_PATH));
+                $file_path = public_path($storagePath . '/' . $old_file_name);
+                if (File::exists($file_path)) {
+                    File::delete($file_path);
+                }
+            }
+
+            // -------------------------
+            // إنشاء اسم الملف الجديد
+            // -------------------------
+            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $extension = $file->getClientOriginalExtension();
+            $filename = $originalName . '_' . uniqid() . '.' . $extension;
+
+            // -------------------------
+            // نقل الملف إلى المجلد العام
+            // -------------------------
+            $file->move(public_path($storagePath), $filename);
+
+            // -------------------------
+            // تحديث مسار الملف في النموذج
+            // -------------------------
+            $model->{$columnName} = url('/') . '/'  . $storagePath . '/' . $filename;
             $model->save();
 
-            return $model->{$variable}; // إرجاع رابط المرفق الجديد
+            return $model->{$columnName}; // إرجاع رابط المرفق الجديد
         }
 
         return null;
     }
 
 
+
     public function deleteChatAttachment($model, string $variable = 'attachment'): bool
     {
         if ($model->{$variable}) {
-            // استخراج مسار الملف من الرابط المخزن
-            $filePath = str_replace('/storage/', '', $model->{$variable});
+            // -------------------------
+            // استخراج اسم الملف من الرابط المخزن
+            // -------------------------
+            $fileName = basename(parse_url($model->{$variable}, PHP_URL_PATH));
+            $filePath = public_path('attachments/messages/' . $fileName); // تحديث المسار حسب الحاجة
 
+            // -------------------------
             // حذف الملف من التخزين
-            Storage::disk('public')->delete($filePath);
+            // -------------------------
+            if (File::exists($filePath)) {
+                File::delete($filePath);
+            }
 
-            // إزالة المرفق من قاعدة البيانات
+            // -------------------------
+            // إزالة الرابط من قاعدة البيانات
+            // -------------------------
             $model->{$variable} = null;
             $model->save();
 

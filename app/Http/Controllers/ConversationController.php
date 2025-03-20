@@ -9,6 +9,7 @@ use App\Models\Conversation;
 use App\Models\ConversationBlock;
 use App\Models\Message;
 use App\Models\User;
+use App\Services\ChatService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
@@ -16,11 +17,12 @@ use Illuminate\Support\Facades\Auth;
 class ConversationController extends Controller
 {
     use ApiResponse;
+    protected $chatService;
     protected $imageservice;
 
-
-    public function __construct(ImageService $imageService)
+    public function __construct(ChatService $chatService, ImageService $imageService)
     {
+        $this->chatService = $chatService;
         $this->imageservice = $imageService;
     }
 
@@ -134,16 +136,15 @@ class ConversationController extends Controller
 
     public function sendMessage(StoreMessageRequest $request)
     {
-        try {
-            $data = $request->validated();
-            $message = Message::create(Arr::except($data, ['attachment']));
-            if ($request->has('attachment')) {
-                $this->imageservice->uploadChatAttachment($request, $message);
-            }
-            return $this->successResponse($message, 201);
-        } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage(), 500);
+        $data = $request->validated();
+
+        $response = $this->chatService->sendMessage($data);
+
+        if (!$response['success']) {
+            return response()->json(['error' => $response['error']], 500);
         }
+
+        return response()->json(['message' => 'Message sent successfully', 'data' => $response['message']], 201);
     }
 
 

@@ -55,7 +55,7 @@ class NotificationService
     public function SendMultipleNotifications(array $data)
     {
         try {
-            $userIds = $data['user_ids']; // قائمة معرفات المستخدمين
+            $userIds = json_decode($data['user_ids']); // قائمة معرفات المستخدمين
 
             $notifications = [];
             foreach ($userIds as $userId) {

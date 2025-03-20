@@ -30,7 +30,7 @@ class User extends Authenticatable
         'phone',
         'country',
         'gender',
-        'birht_date',
+        'birth_date',
         'social_id',
         'social_type',
         'is_signed',

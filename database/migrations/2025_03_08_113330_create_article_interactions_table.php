@@ -13,10 +13,11 @@ return new class extends Migration
     {
         Schema::create('article_interactions', function (Blueprint $table) {
             $table->id();
-            $table->integer('loves')->default(0);
-            $table->integer('likes')->default(0);
-            $table->integer('dislikes')->default(0);
-            $table->integer('laughtes')->default(0);
+            $table->unsignedBigInteger('loves')->default(0);
+            $table->unsignedBigInteger('likes')->default(0);
+            $table->unsignedBigInteger('dislikes')->default(0);
+            $table->unsignedBigInteger('laughters')->default(0);
+            $table->unsignedBigInteger('totalReactions')->default(0);
             $table->foreignId('article_id')->constrained('articles', 'id')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
         });

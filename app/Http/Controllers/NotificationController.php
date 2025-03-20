@@ -6,6 +6,7 @@ use App\Http\Requests\SendNotificationRequest;
 use App\Http\Traits\ApiResponse;
 use App\Http\Services\NotificationService;
 use App\Models\Notification;
+use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
@@ -33,9 +34,13 @@ class NotificationController extends Controller
     }
 
 
-    public function sendNotifications(SendNotificationRequest $request)
+    public function sendMultipleNotification(Request $request)
     {
-        $data = $request->validated(); // التحقق من صحة البيانات
+        $data = $request->validate([
+            'user_ids' => 'required',
+            "content" => "required|string",
+            "sender_id" => "required|exists:users,id",
+        ]);
         $response = $this->notificationService->SendMultipleNotifications($data); // استدعاء الدالة من الخدمة
 
         if ($response['success']) {

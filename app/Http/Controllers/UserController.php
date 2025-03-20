@@ -29,7 +29,7 @@ class UserController extends Controller
     {
         try {
             $users = User::orderBy('created_at', 'desc')
-                ->select('id', 'name', 'image', 'email', 'role', 'created_at')
+                ->select('id', 'name', 'image', 'email',  'phone', 'role', 'status',  'gender', 'created_at')
                 ->paginate(30);
 
             if ($users->isEmpty()) {
@@ -117,10 +117,7 @@ class UserController extends Controller
 
             // حذف الصورة إذا وُجدت
             if (!empty($user->image)) {
-                $imageDeleted = $this->imageservice->deleteOldImage($user, 'images/users');
-                if (!$imageDeleted) {
-                    return $this->errorResponse('Failed to delete user image', 500);
-                }
+                $this->imageservice->deleteOldImage($user, 'images/users');
             }
 
             $user->delete();
@@ -144,7 +141,7 @@ class UserController extends Controller
             $name = strtolower($validatedData['name']);
 
             // البحث مع تحسين الأداء
-            $users = User::select('id', 'name', 'image', 'email', 'role', 'created_at')
+            $users = User::select('id', 'name', 'image', 'email', 'role', 'phone', 'created_at')
                 ->whereRaw('LOWER(name) LIKE ?', ['%' . $name . '%'])
                 ->orderBy('created_at', 'desc')
                 ->paginate(30);

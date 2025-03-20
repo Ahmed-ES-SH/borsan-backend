@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('country')->nullable();
             $table->enum('gender', ['male', 'female'])->nullable();
-            $table->date('birht_date')->nullable();
+            $table->date('birth_date')->nullable();
             $table->string('social_id')->nullable();
             $table->string('social_type')->nullable();
             $table->boolean('is_signed')->default(false);

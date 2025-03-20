@@ -12,6 +12,7 @@ class ArticleInteractions extends Model
         'dislikes',
         'laughters',
         'article_id',
+        'totalReactions',
     ];
 
     public function article()

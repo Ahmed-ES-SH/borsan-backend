@@ -29,7 +29,8 @@ class ArticleController extends Controller
     {
         try {
             $articles = Article::orderBy('created_at', 'desc')
-                ->with(['author:id,name,image', 'category'])
+                ->with(['author:id,name,image', 'category', 'interactions:id,article_id,totalReactions'])
+                ->withCount('comments')
                 ->paginate(20);
 
             if ($articles->total() === 0) {
@@ -105,8 +106,10 @@ class ArticleController extends Controller
                 ->orderByDesc('views')
                 ->with([
                     'author:id,name,image',
-                    'category:id,title_en,title_ar'
+                    'category:id,title_en,title_ar',
+                    'interactions:id,article_id,totalReactions'
                 ])
+                ->withCount('comments')
                 ->paginate(20);
 
             if ($articles->total() == 0) {
@@ -179,7 +182,7 @@ class ArticleController extends Controller
      */
     public function show($id)
     {
-        $article = Article::findOrFail($id);
+        $article = Article::with('category:id,title_en')->findOrFail($id);
         return $this->successResponse($article, 200);
         try {
         } catch (\Exception $e) {
@@ -216,7 +219,7 @@ class ArticleController extends Controller
         try {
             $article = Article::findOrFail($id);
             if ($article->image) {
-                $this->imageservice->deleteOldImage($article, 'images/articles', 'image');
+                $this->imageservice->deleteOldImage($article, 'images/articles');
             }
             $article->delete();
             return $this->successResponse(['message' => 'تم حذف المقال بنجاح', 'title' => $article->title_en], 200);

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('phone_number')->nullable();
             $table->string('subject');
             $table->longText('content');
-            $table->enum('status', ['pending', 'reviewed', 'resolved'])->default('pending'); // ✅ إضافة القيم للحالة
+            $table->enum('status', ['pending', 'under_review', 'resolved'])->default('pending'); // ✅ إضافة القيم للحالة
             $table->timestamps();
         });
     }

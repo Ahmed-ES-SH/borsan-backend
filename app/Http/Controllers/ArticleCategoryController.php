@@ -28,7 +28,7 @@ class ArticleCategoryController extends Controller
     {
         try {
             $Categories = ArticleCategory::orderBy('created_at', 'desc')->paginate(30);
-            if ($Categories->total === 0) {
+            if ($Categories->total() === 0) {
                 return $this->noContentResponse();
             }
             return $this->paginationResponse($Categories, 200);
